@@ -26,6 +26,7 @@ class doc(BaseModel):
     availability: str
     day_avail: str
     duration: int
+    time: str
 
 # c2.execute("""
 #            ALTER table doctors_list ADD COLUMN booked text
@@ -53,8 +54,8 @@ def patient_lookup(
     }
     else:
         return {
-        "status": item[3],
-        "patient_id": "null"
+        "status": "Patient not Found",
+        "patient_id": None
     }
 
 @app.get("/doctors/availability/")
@@ -66,18 +67,36 @@ def get_avail_list(speciality: str,
     query = "SELECT * FROM doctors_list WHERE spclity = ? AND day_avail = ? AND duration = ?"
     c2.execute(query, (speciality, day_avail, duration))
     items = c2.fetchall()
+    conn2.close()
     return items
 
-@app.get("/appointments/book/")
-def appointment_booking(patient_id : str,
-                        doc_id: int,
-                        time: str):
-    conn2 = sqlite3.connect('doctors.db')
-    c2 = conn2.cursor()
-    query = "SELECT * FROM doctors_list WHERE doc_id = ? AND time = ?"
-    c2.execute(query, (doc_id, time))
-    query2 = "INSERT INTO doctors_list VALUES ?"
-    c2.execute(query2, patient_id)
-    conn2.commit()
-    c2.close()
-    conn2.close()
+@app.post("/appointments/book/")
+def appointment_booking(
+    patient_id: int,
+    doc_id: int,
+    time_slot: str
+):
+    conn = sqlite3.connect("doctors.db")
+    c = conn.cursor()
+    c.execute(
+        "SELECT booked FROM doctors_list WHERE doc_id=? AND time_slot=?",
+        (doc_id, time_slot)
+    )
+    slot = c.fetchone()
+    if slot is None:
+        conn.close()
+        return {"message": "Slot not found"}
+    if slot[0] == "Yes":
+        conn.close()
+        return {"message": "Slot already booked"}
+    c.execute(
+        """
+        UPDATE doctors_list
+        SET booked='Yes'
+        WHERE doc_id=? AND time_slot=?
+        """,
+        (doc_id, time_slot)
+    )
+    conn.commit()
+    conn.close()
+    return {"message": "Appointment booked successfully"}
