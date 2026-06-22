@@ -28,12 +28,7 @@ class doc(BaseModel):
     duration: int
 
 # c2.execute("""
-#            CREATE TABLE doctors_list (
-#            doc_id integer
-#            spclity text,
-#            day_avail text,
-#            duration integer
-#            )
+#            ALTER table doctors_list ADD COLUMN booked text
 # """)
 @app.get("/patient_lookup/{first_name}/{last_name}/{dob}")
 def patient_lookup(
@@ -73,4 +68,16 @@ def get_avail_list(speciality: str,
     items = c2.fetchall()
     return items
 
-    
+@app.get("/appointments/book/")
+def appointment_booking(patient_id : str,
+                        doc_id: int,
+                        time: str):
+    conn2 = sqlite3.connect('doctors.db')
+    c2 = conn2.cursor()
+    query = "SELECT * FROM doctors_list WHERE doc_id = ? AND time = ?"
+    c2.execute(query, (doc_id, time))
+    query2 = "INSERT INTO doctors_list VALUES ?"
+    c2.execute(query2, patient_id)
+    conn2.commit()
+    c2.close()
+    conn2.close()
