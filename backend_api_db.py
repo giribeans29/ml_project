@@ -64,8 +64,8 @@ def get_avail_list(speciality: str,
                    duration: int):
     conn2 = sqlite3.connect('doctors.db')
     c2 = conn2.cursor()
-    query = "SELECT * FROM doctors_list WHERE spclity = ? AND day_avail = ? AND duration = ?"
-    c2.execute(query, (speciality, day_avail, duration))
+    query = "SELECT * FROM doctors_list WHERE spclity = ? AND day_avail = ? AND duration = ? AND booked = ?"
+    c2.execute(query, (speciality, day_avail, duration, 0))
     items = c2.fetchall()
     conn2.close()
     return items
