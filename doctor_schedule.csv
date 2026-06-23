@@ -1,0 +1,11 @@
+doc_id,doctor_name,spclity,day_of_week,time_slot,is_booked
+440,Dr. James Hernandez,Orthopaedics,Wednesday,02:00 PM,False
+985,Annette Buck,Pulmonology,Friday,01:00 PM,False
+755,Jasmine Howard,Cardiology,Sunday,09:00 AM,False
+610,Michael Ochoa,Oncology,Sunday,01:00 PM,True
+670,Nicole Burke,Cardiology,Saturday,03:00 PM,False
+998,William Barnes,GeneralMedicine,Saturday,09:00 AM,True
+284,Matthew Carroll,Oncology,Thursday,01:00 PM,False
+218,Thomas Roth,GeneralMedicine,Sunday,11:00 AM,True
+583,Angela Gallagher,Orthopaedics,Friday,01:00 PM,True
+930,Daniel Coleman,GeneralMedicine,Friday,10:00 AM,True

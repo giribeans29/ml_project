@@ -1,0 +1,11 @@
+doc_id,doctor_name,spclity,day_of_week,time_slot,is_booked
+273,Cathy Robinson,Nephrology,Saturday,03:00 PM,True
+474,Nancy Perez PhD,Cardiology,Saturday,09:00 AM,False
+475,Cynthia Miller,Oncology,Monday,11:00 AM,False
+239,Jeremy Vance,GeneralMedicine,Sunday,01:00 PM,True
+879,James Smith,Oncology,Saturday,01:00 PM,False
+985,Laurie Jones,Cardiology,Thursday,02:00 PM,False
+751,Sheri Saunders,Pulmonology,Wednesday,11:00 AM,True
+901,James Schmidt,Pulmonology,Tuesday,01:00 PM,True
+622,Dustin Simpson,Cardiology,Wednesday,09:00 AM,True
+328,Michael Suarez,Orthopaedics,Tuesday,01:00 PM,False
