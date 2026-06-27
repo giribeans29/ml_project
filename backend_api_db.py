@@ -2,6 +2,11 @@ from fastapi import FastAPI, Path
 import sqlite3
 from pydantic import BaseModel
 import sqlalchemy
+from langchain.agents import create_agent
+from langchain_core.tools import tool
+import requests
+from langchain_google_genai import ChatGoogleGenerativeAI
+
 # conn1 =  sqlite3.connect('patients.db')
 # conn2 = sqlite3.connect('doctors.db')
 
@@ -31,7 +36,7 @@ class doc(BaseModel):
 # c2.execute("""
 #            ALTER table doctors_list ADD COLUMN booked text
 # """)
-@app.get("/patient_lookup/{first_name}/{last_name}/{dob}")
+@app.post("/patient_lookup/{first_name}/{last_name}/{dob}")
 def patient_lookup(
     first_name: str,
     last_name: str,
@@ -47,25 +52,25 @@ def patient_lookup(
 
     conn1.close()
 
-    if item is None:
+    if item is not None:
          return {
-        "status": item[3],
+        "status": "returning",
         "patient_id": item[4]
     }
     else:
         return {
-        "status": "Patient not Found",
+        "status": "new",
         "patient_id": None
     }
 
-@app.get("/doctors/availability/")
+@app.post("/doctors/availability/")
 def get_avail_list(speciality: str,
                    day_avail: str,
                    duration: int):
     conn2 = sqlite3.connect('doctors.db')
     c2 = conn2.cursor()
     query = "SELECT * FROM doctors_list WHERE spclity = ? AND day_avail = ? AND duration = ? AND booked = ?"
-    c2.execute(query, (speciality, day_avail, duration, 0))
+    c2.execute(query, (speciality, day_avail, duration, 'No'))
     items = c2.fetchall()
     conn2.close()
     return items
@@ -100,3 +105,20 @@ def appointment_booking(
     conn.commit()
     conn.close()
     return {"message": "Appointment booked successfully"}
+
+
+
+# agent = create_agent(
+#     model="google_genai:gemini-3.5-flash",
+#     tools=tool
+# )
+
+
+# @tool
+
+
+
+
+
+
+
