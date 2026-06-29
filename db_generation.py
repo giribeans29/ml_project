@@ -1,6 +1,10 @@
 from faker import Faker
 import pandas as pd
+import sqlite3
 import random
+
+conn1 = sqlite3.connect("patients.db")
+conn2 = sqlite3.connect("doctors.db")
 
 fake = Faker()
 
@@ -35,3 +39,5 @@ df_doctors = pd.DataFrame(doctors)
 
 df_patients.to_csv("patients_list.csv", index=False)
 df_doctors.to_csv("doctor_schedule.csv", index=False)
+df_doctors.to_sql(name="patients", index=False,con=conn1)
+df_patients.to_sql("doctor_Schedule", index=False, con=conn2)
