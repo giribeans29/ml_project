@@ -1,11 +1,2 @@
-POST /patients/lookup: accepts {"first_name": "aaron", "last_name": "george",
-"dob": "10/13/2005"}. checks the DB. returns {"status": "returning", "patient_id":
-"123"} or {"status": "new", "patient_id": null} -- done
-
-
-● POST /doctors/availability: accepts {"specialty": "physio", "day": "friday",
-"duration_minutes": 30}. returns a list of available slots. - done
-
-
-● POST /appointments/book: accepts {"patient_id": "123", "doc_id": "doc_1",
-"time_slot": "15:00"}. updates SQLite to mark the slot as booked. 
+dfba80fce4f0632382328246335947acf98872c6
+dfba80fce4f0632382328246335947acf98872c6
