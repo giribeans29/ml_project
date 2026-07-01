@@ -23,6 +23,8 @@ class patientlookuprequest(BaseModel):
     first_name: str
     last_name: str
     dob: str
+    patient_id: int
+    status: str
 
 class doc(BaseModel):
     doc_id: int
@@ -46,7 +48,7 @@ def patient_lookup( patient: patientlookuprequest
     conn1 = sqlite3.connect("doctors.db")
     c1 = conn1.cursor()
 
-    query = "SELECT * FROM doctor_Schedule WHERE first_name = ? AND last_name = ? AND dob = ?"
+    query = "SELECT * FROM patients_list WHERE first_name = ? AND last_name = ? AND dob = ?"
 
     c1.execute(query, (patient.first_name, patient.last_name, patient.dob))
     item = c1.fetchone()
@@ -56,7 +58,7 @@ def patient_lookup( patient: patientlookuprequest
     if item is not None:
          return {
         "status": "returning",
-        "patient_id": item[1]
+        "patient_id": item[4]
     }
     else:
         return {
