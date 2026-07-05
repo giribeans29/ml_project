@@ -29,10 +29,10 @@ class patientlookuprequest(BaseModel):
 class doc(BaseModel):
     doc_id: int
     spclity: str
-    availability: str
     day_avail: str
     duration: int
-    time: str
+    time_slot: str
+
 
 class BookingRequest(BaseModel):
     patient_id: int
@@ -70,8 +70,8 @@ def patient_lookup( patient: patientlookuprequest
 def get_avail_list(doctor: doc):
     conn2 = sqlite3.connect('patients.db')
     c2 = conn2.cursor()
-    query = "SELECT * FROM doctors_list WHERE spclity = ? AND day_avail = ? AND duration = ? AND booked = ?"
-    c2.execute(query, (doc.spclity, doc.day_avail, doc.duration, 'No'))
+    query = "SELECT * FROM patients WHERE spclity = ? AND day_of_week = ? AND is_booked = ?"
+    c2.execute(query, (doc.spclity, doc.day_avail, doc.duration, '0'))
     items = c2.fetchall()
     conn2.close()
     return items
@@ -82,23 +82,23 @@ def appointment_booking(req: BookingRequest
     conn = sqlite3.connect("doctors.db")
     c = conn.cursor()
     c.execute(
-        "SELECT booked FROM doctors_list WHERE doc_id=? AND time_slot=?",
+        "SELECT is_booked FROM patients WHERE doc_id=? AND time_slot=?",
         (req.doc_id, req.time_slot)
     )
     slot = c.fetchone()
     if slot is None:
         conn.close()
         return {"message": "Slot not found"}
-    if slot[0] == "Yes":
+    if slot[0] == "1":
         conn.close()
         return {"message": "Slot already booked"}
     c.execute(
         """
         UPDATE doctors_list
-        SET booked='Yes'
+        SET is_booked='1'
         WHERE doc_id=? AND time_slot=?
         """,
-        (req.doc_id, req.time_slote)
+        (req.doc_id, req.time_slot)
     )
     conn.commit()
     conn.close()

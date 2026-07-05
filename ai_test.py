@@ -9,4 +9,4 @@ graph.add_edge(START, "mock_llm")
 graph.add_edge("mock_llm", END)
 graph = graph.compile()
 
-graph.invoke({"messages": [{"role": "user", "content": "hi!"}]})
+print(graph.invoke({"messages": [{"role": "user", "content": "hi!"}]}))
