@@ -44,7 +44,7 @@ def book_appointments(patient_id: int, doc_id: int, time_slot: str) -> dict:
     """perform the action based on the input given"""
 
     response = requests.post(
-        "http://127.0.0.1:8000/doctors/availability/",
+        "http://127.0.0.1:8000/appointments/book/",
         json={
             "patient_id":patient_id,
             "doc_id":doc_id,
@@ -57,36 +57,18 @@ def book_appointments(patient_id: int, doc_id: int, time_slot: str) -> dict:
 
 agent = create_agent(
     model="google_genai:gemini-2.5-flash-lite",
-    tools=[lookup_patient,doctor_availability],
+    tools=[lookup_patient,doctor_availability,book_appointments],
     system_prompt="""
 You are a medical receptionist.
 
-Whenever the user gives their first name, last name and their date of birth,
-use your lookup tool. Once you get the tool's JSON response, depending on the response
+First, you must ask the patient's name and specifically mention the first name, last name and
+the date of birth of the patient. After that you take that and call the lookup_patient tool.
 
-After the lookup, when the user asks for doctors list, ask their 
+Based on the output, if the patient is new, ask what speciality of doctor and what time slot does the patient want.
+based upon the response call the doctor_availabilty tool and then compare with the available doctors and present the available doctors
+and confirm it with the patient.
+
+Once we doctor and everything is confirmed, we will call the tool book_appointments
+and update the record. 
 """
 )
-
-
-
-user = input("\nYou: ")
-
-response = agent.invoke(
-    {
-        "messages": [
-                {
-                    "role": "user",
-                    "content": user
-                }
-            ]
-        }
-    )
-
-print("\nAssistant:")
-tool_messages = [msg.content for msg in response["messages"] if msg.type == "tool"]
-
-if tool_messages:
-    print(tool_messages[0])
-else:
-    print(response["messages"][-1].content)

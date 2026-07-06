@@ -1,18 +1,15 @@
 from fastapi import FastAPI, Path
 import sqlite3
 from pydantic import BaseModel
-from langchain.agents import create_agent
-from langchain_core.tools import tool
 import requests
-from dotenv import load_dotenv
-import os
-from langchain_google_genai import ChatGoogleGenerativeAI
 
 # conn1 =  sqlite3.connect('patients.db')
-# conn1 = sqlite3.connect("EMR_Database.db")
+# # conn1 = sqlite3.connect(".db")
 
 # # c1 = conn1.cursor()
-# c2 = conn2.cursor()
+# c2 = conn1.cursor()
+# query = ""
+
 
 app = FastAPI()
 
@@ -45,10 +42,10 @@ class BookingRequest(BaseModel):
 @app.post("/patient_lookup/")
 def patient_lookup( patient: patientlookuprequest
 ):
-    conn1 = sqlite3.connect("doctors.db")
+    conn1 = sqlite3.connect("doctors_final.db")
     c1 = conn1.cursor()
 
-    query = "SELECT * FROM patients_list WHERE first_name = ? AND last_name = ? AND dob = ?"
+    query = "SELECT * FROM doctor_schedule WHERE first_name = ? AND last_name = ? AND dob = ?"
 
     c1.execute(query, (patient.first_name, patient.last_name, patient.dob))
     item = c1.fetchone()
@@ -68,9 +65,9 @@ def patient_lookup( patient: patientlookuprequest
 
 @app.post("/doctors/availability/")
 def get_avail_list(doctor: doc):
-    conn2 = sqlite3.connect('patients.db')
+    conn2 = sqlite3.connect('patients_final.db')
     c2 = conn2.cursor()
-    query = "SELECT * FROM patients WHERE spclity = ? AND day_of_week = ? AND is_booked = ?"
+    query = "SELECT * FROM patients_list WHERE spclity = ? AND day_of_week = ? AND duration = ? AND is_booked = ?"
     c2.execute(query, (doc.spclity, doc.day_avail, doc.duration, '0'))
     items = c2.fetchall()
     conn2.close()
@@ -79,10 +76,10 @@ def get_avail_list(doctor: doc):
 @app.post("/appointments/book/")
 def appointment_booking(req: BookingRequest
 ):
-    conn = sqlite3.connect("doctors.db")
+    conn = sqlite3.connect("patients_final.db")
     c = conn.cursor()
     c.execute(
-        "SELECT is_booked FROM patients WHERE doc_id=? AND time_slot=?",
+        "SELECT is_booked FROM patients_list WHERE doc_id=? AND time_slot=?",
         (req.doc_id, req.time_slot)
     )
     slot = c.fetchone()
@@ -103,3 +100,4 @@ def appointment_booking(req: BookingRequest
     conn.commit()
     conn.close()
     return {"message": "Appointment booked successfully"}
+

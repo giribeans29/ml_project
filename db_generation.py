@@ -3,8 +3,8 @@ import pandas as pd
 import sqlite3
 import random
 
-conn1 = sqlite3.connect("patients.db")
-conn2 = sqlite3.connect("doctors.db")
+conn1 = sqlite3.connect("patients_final.db")
+conn2 = sqlite3.connect("doctors_final.db")
 
 fake = Faker()
 
@@ -28,16 +28,17 @@ for _ in range(1,11):
     doctors.append({
         "doc_id":fake.numerify("###"),
         "doctor_name":fake.name(),
-        "spclity":random.choice(['Orthopaedics','GeneralMedicine','Cardiology','Nephrology','Pulmonology','Oncology']),
+        "spclity":random.choice(['Orthopaedics','GeneralMedicine','Cardiology','Nephrology','Pulmonology','Oncology',"Ent"]),
         "day_of_week": fake.day_of_week(),
         "time_slot": random.choice( ["09:00 AM","10:00 AM","11:00 AM","01:00 PM","02:00 PM","03:00 PM"]),
-        "is_booked": random.choice([True,False])
-    })
+        "is_booked": random.choice([True,False]),
+        "Duration": random.choice(["30","60"])
+        })
 
 df_patients = pd.DataFrame(patients)
 df_doctors = pd.DataFrame(doctors)
 
-df_patients.to_csv("patients_list.csv", index=False)
-df_doctors.to_csv("doctor_schedule.csv", index=False)
-df_doctors.to_sql(name="patients", index=False,con=conn1)
-df_patients.to_sql("doctor_Schedule", index=False, con=conn2)
+# df_patients.to_csv("patients_list.csv", index=False)
+# df_doctors.to_csv("doctor_schedule.csv", index=False)
+df_doctors.to_sql(name="patients_list", index=False,con=conn1)
+df_patients.to_sql("doctor_schedule", index=False, con=conn2)
