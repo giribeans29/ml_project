@@ -20,15 +20,11 @@ class patientlookuprequest(BaseModel):
     first_name: str
     last_name: str
     dob: str
-    patient_id: int
-    status: str
 
 class doc(BaseModel):
-    doc_id: int
     spclity: str
     day_avail: str
-    duration: int
-    time_slot: str
+    duration: str
 
 
 class BookingRequest(BaseModel):

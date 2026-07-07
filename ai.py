@@ -3,8 +3,12 @@ from dotenv import load_dotenv, find_dotenv
 import requests
 from langchain.agents import create_agent
 from langchain_core.tools import tool
+from typing import TypedDict
+from langchain_core.messages import BaseMessage
+from langgraph.graph import StateGraph, START, END
+from langchain_core.messages import HumanMessage, SystemMessage, ToolMessage
 
-load_dotenv(find_dotenv())
+load_dotenv(r"C:\Users\giris\Desktop\ml\venv\.env")
 
 os.environ["GOOGLE_API_KEY"] = os.getenv("API_KEY")
 
@@ -54,21 +58,123 @@ def book_appointments(patient_id: int, doc_id: int, time_slot: str) -> dict:
 
     return response.json()
 
+class AgentState(TypedDict):
+    messages: list[BaseMessage]
+    patient_status: str
+    required_duration: str
+    booking_confirmed: bool
 
 agent = create_agent(
     model="google_genai:gemini-2.5-flash-lite",
-    tools=[lookup_patient,doctor_availability,book_appointments],
+    tools=[
+        lookup_patient,
+        doctor_availability,
+        book_appointments,
+    ],
     system_prompt="""
 You are a medical receptionist.
 
-First, you must ask the patient's name and specifically mention the first name, last name and
-the date of birth of the patient. After that you take that and call the lookup_patient tool.
+Your job is to book appointments naturally.
 
-Based on the output, if the patient is new, ask what speciality of doctor and what time slot does the patient want.
-based upon the response call the doctor_availabilty tool and then compare with the available doctors and present the available doctors
-and confirm it with the patient.
+Rules:
 
-Once we doctor and everything is confirmed, we will call the tool book_appointments
-and update the record. 
+1. Greet the patient.
+2. Ask for their first name, last name and date of birth.
+3. Once you have all three, call lookup_patient.
+4. If the patient is returning, remember they need a 30-minute appointment.
+5. If the patient is new, remember they need a 60-minute appointment.
+6. Ask for the doctor's speciality.
+7. Ask for the preferred day.
+8. Call doctor_availability.
+9. Present the available doctors and slots.
+10. Ask the patient which slot they want.
+11. Call book_appointments.
+12. Confirm the appointment.
 """
 )
+
+def chatbot(state: AgentState):
+    result = agent.invoke(
+        {
+            "messages": state["messages"]
+        }
+    )
+
+    state["messages"] = result["messages"]
+
+    return state
+
+def determine_duration(state: AgentState):
+
+    if state["patient_status"] == "new":
+        state["required_duration"] = 60
+    else:
+        state["required_duration"] = 30
+
+    return state
+
+graph_builder = StateGraph(AgentState)
+
+graph_builder.add_node("chatbot",chatbot)
+graph_builder.add_node("determine_duration", determine_duration)
+
+graph_builder.add_edge(START, "chatbot")
+graph_builder.add_edge("chatbot", "determine_duration")
+graph_builder.add_edge("determine_duration", "chatbot")
+graph_builder.add_edge("chatbot", END)
+graph = graph_builder.compile()
+
+state = {
+    "messages": [
+        SystemMessage(
+            content="""
+You are a medical receptionist.
+
+Greet the patient.
+
+Ask for:
+- First name
+- Last name
+- Date of birth
+
+Once you have those, call lookup_patient.
+
+If the patient is new, they need a 60-minute appointment.
+If returning, they need a 30-minute appointment.
+
+Ask for:
+- Doctor speciality
+- Preferred day
+
+Call doctor_availability.
+
+Present the available slots.
+
+Ask the patient to choose one.
+
+Call book_appointments.
+
+Confirm the booking.
+"""
+        )
+    ],
+    "patient_status": "unknown",
+    "required_duration": 0,
+    "booking_confirmed": False,
+}
+while True:
+
+    user = input("You: ")
+
+    state["messages"].append(
+        HumanMessage(content=user)
+    )
+
+    state = chatbot(state)
+
+    print("\nAI:", state["messages"][-1].content)
+
+    if state["booking_confirmed"]:
+        break
+    if user == "exit":
+        break
