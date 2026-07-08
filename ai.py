@@ -4,8 +4,10 @@ import requests
 from langchain.agents import create_agent
 from langchain_core.tools import tool
 from typing import TypedDict
-from langchain_core.messages import BaseMessage
+import json
+from langchain_core.messages import BaseMessage, AIMessage, ToolMessage
 from langgraph.graph import StateGraph, START, END
+from pprint import pprint
 from langchain_core.messages import HumanMessage, SystemMessage, ToolMessage
 
 load_dotenv(r"C:\Users\giris\Desktop\ml\venv\.env")
@@ -25,11 +27,12 @@ def lookup_patient(first_name: str, last_name: str, dob: str) -> dict:
             "dob": dob,
         },
     )
-
-    return response.json()
+    result = response.json()
+    print(result)
+    return result
 
 @tool
-def doctor_availability(spclity: str, day_of_week: str, duration: int) -> dict:
+def doctor_availability(spclity: str, day_of_week: str, duration: str) -> dict:
     """Accept the input and Return the output"""
 
     response = requests.post(
@@ -44,13 +47,12 @@ def doctor_availability(spclity: str, day_of_week: str, duration: int) -> dict:
     return response.json()
 
 @tool
-def book_appointments(patient_id: int, doc_id: int, time_slot: str) -> dict:
+def book_appointments(doc_id: int, time_slot: str) -> dict:
     """perform the action based on the input given"""
 
     response = requests.post(
         "http://127.0.0.1:8000/appointments/book/",
         json={
-            "patient_id":patient_id,
             "doc_id":doc_id,
             "time_slot":time_slot
         },
@@ -92,6 +94,29 @@ Rules:
 12. Confirm the appointment.
 """
 )
+
+def update_state(state: AgentState):
+
+    for msg in reversed(state["messages"]):
+
+        if isinstance(msg, ToolMessage):
+
+            try:
+                result = json.loads(msg.content)
+
+                # lookup_patient response
+                if "status" in result:
+                    state["patient_status"] = result["status"]
+
+                # booking response
+                if "message" in result:
+                    if "successfully" in result["message"].lower():
+                        state["booking_confirmed"] = True
+
+            except:
+                pass
+
+    return state
 
 def chatbot(state: AgentState):
     result = agent.invoke(
@@ -139,8 +164,13 @@ Ask for:
 
 Once you have those, call lookup_patient.
 
-If the patient is new, they need a 60-minute appointment.
-If returning, they need a 30-minute appointment.
+When lookup_patient returns whether the patient is new or returning,
+wait for the application to determine the required appointment duration.
+
+Do not decide the duration yourself.
+
+Use the duration provided by the application when calling
+doctor_availability.
 
 Ask for:
 - Doctor speciality
@@ -163,18 +193,27 @@ Confirm the booking.
     "booking_confirmed": False,
 }
 while True:
-
     user = input("You: ")
 
-    state["messages"].append(
-        HumanMessage(content=user)
-    )
+    if user.lower() == "exit":
+        break
+
+    state["messages"].append(HumanMessage(content=user))
 
     state = chatbot(state)
 
-    print("\nAI:", state["messages"][-1].content)
+    state = update_state(state)
+    state = determine_duration(state)
+
+    for msg in reversed(state["messages"]):
+        if isinstance(msg, AIMessage):
+            print("\nAI:", msg.text())
+            break
+
+    print("\nPatient Status    :", state["patient_status"])
+    print("Required Duration :", state["required_duration"])
+    print("Booking Confirmed :", state["booking_confirmed"])
 
     if state["booking_confirmed"]:
-        break
-    if user == "exit":
+        print("\nAppointment booked successfully!")
         break

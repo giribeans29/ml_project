@@ -23,12 +23,12 @@ class patientlookuprequest(BaseModel):
 
 class doc(BaseModel):
     spclity: str
-    day_avail: str
-    duration: str
+    day_of_week: str
+    duration: int
 
 
 class BookingRequest(BaseModel):
-    patient_id: int
+    patient_id: str
     doc_id: int
     time_slot: str
 
@@ -64,7 +64,7 @@ def get_avail_list(doctor: doc):
     conn2 = sqlite3.connect('patients_final.db')
     c2 = conn2.cursor()
     query = "SELECT * FROM patients_list WHERE spclity = ? AND day_of_week = ? AND duration = ? AND is_booked = ?"
-    c2.execute(query, (doc.spclity, doc.day_avail, doc.duration, '0'))
+    c2.execute(query, (doctor.spclity, doctor.day_of_week, doctor.duration, 0))
     items = c2.fetchall()
     conn2.close()
     return items
@@ -79,7 +79,7 @@ def appointment_booking(req: BookingRequest
         (req.doc_id, req.time_slot)
     )
     slot = c.fetchone()
-    if slot is None:
+    if slot[0] == "0":
         conn.close()
         return {"message": "Slot not found"}
     if slot[0] == "1":
@@ -87,7 +87,7 @@ def appointment_booking(req: BookingRequest
         return {"message": "Slot already booked"}
     c.execute(
         """
-        UPDATE doctors_list
+        UPDATE patients_list
         SET is_booked='1'
         WHERE doc_id=? AND time_slot=?
         """,
