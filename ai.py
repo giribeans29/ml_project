@@ -47,7 +47,7 @@ def doctor_availability(spclity: str, day_of_week: str, duration: str) -> dict:
     return response.json()
 
 @tool
-def book_appointments(doc_id: int, time_slot: str) -> dict:
+def book_appointments(doc_id: str, time_slot: str) -> dict:
     """perform the action based on the input given"""
 
     response = requests.post(

@@ -28,9 +28,8 @@ class doc(BaseModel):
 
 
 class BookingRequest(BaseModel):
-    patient_id: str
-    doc_id: int
-    time_slot: str
+    doc_id: str | None
+    time_slot: str 
 
 # c2.execute("""
 #            ALTER table doctors_list ADD COLUMN booked text
@@ -79,7 +78,7 @@ def appointment_booking(req: BookingRequest
         (req.doc_id, req.time_slot)
     )
     slot = c.fetchone()
-    if slot[0] == "0":
+    if slot is None:
         conn.close()
         return {"message": "Slot not found"}
     if slot[0] == "1":
