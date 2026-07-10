@@ -24,7 +24,7 @@ class patientlookuprequest(BaseModel):
 class doc(BaseModel):
     spclity: str
     day_of_week: str
-    duration: int
+    duration: str
 
 
 class BookingRequest(BaseModel):
@@ -63,7 +63,7 @@ def get_avail_list(doctor: doc):
     conn2 = sqlite3.connect('patients_final.db')
     c2 = conn2.cursor()
     query = "SELECT * FROM patients_list WHERE spclity = ? AND day_of_week = ? AND duration = ? AND is_booked = ?"
-    c2.execute(query, (doctor.spclity, doctor.day_of_week, doctor.duration, 0))
+    c2.execute(query, (doctor.spclity, doctor.day_of_week, doctor.duration, "0"))
     items = c2.fetchall()
     conn2.close()
     return items

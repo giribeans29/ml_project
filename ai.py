@@ -67,7 +67,7 @@ class AgentState(TypedDict):
     booking_confirmed: bool
 
 agent = create_agent(
-    model="google_genai:gemini-2.5-flash-lite",
+    model="google_genai:gemini-2.5-flash",
     tools=[
         lookup_patient,
         doctor_availability,
