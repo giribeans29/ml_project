@@ -28,7 +28,6 @@ def lookup_patient(first_name: str, last_name: str, dob: str) -> dict:
         },
     )
     result = response.json()
-    print(result)
     return result
 
 @tool
@@ -43,7 +42,6 @@ def doctor_availability(spclity: str, day_of_week: str, duration: str) -> dict:
             "duration":duration
         },
     )
-
     return response.json()
 
 @tool
@@ -149,71 +147,88 @@ graph_builder.add_edge("determine_duration", "chatbot")
 graph_builder.add_edge("chatbot", END)
 graph = graph_builder.compile()
 
-state = {
-    "messages": [
-        SystemMessage(
-            content="""
+def create_state():
+
+    return {
+        "messages": [
+            SystemMessage(
+                content="""
 You are a medical receptionist.
 
 Greet the patient.
 
 Ask for:
+
 - First name
 - Last name
 - Date of birth
 
-Once you have those, call lookup_patient.
+Call lookup_patient.
 
-When lookup_patient returns whether the patient is new or returning,
-wait for the application to determine the required appointment duration.
+Wait for the application to determine
+appointment duration.
 
-Do not decide the duration yourself.
+Ask for speciality.
 
-Use the duration provided by the application when calling
-doctor_availability.
-
-Ask for:
-- Doctor speciality
-- Preferred day
+Ask for preferred day.
 
 Call doctor_availability.
 
-Present the available slots.
+Present slots.
 
-Ask the patient to choose one.
+Book appointment.
 
-Call book_appointments.
-
-Confirm the booking.
+Confirm booking.
 """
-        )
-    ],
-    "patient_status": "unknown",
-    "required_duration": 0,
-    "booking_confirmed": False,
-}
-while True:
-    user = input("You: ")
+            )
+        ],
+        "patient_status": "unknown",
+        "required_duration": 0,
+        "booking_confirmed": False,
+    }
 
-    if user.lower() == "exit":
-        break
+def process_message(state: AgentState, user_message: str):
 
-    state["messages"].append(HumanMessage(content=user))
+    state["messages"].append(
+        HumanMessage(content=user_message)
+    )
 
     state = chatbot(state)
-
     state = update_state(state)
     state = determine_duration(state)
 
+    ai_response = ""
+
     for msg in reversed(state["messages"]):
+
         if isinstance(msg, AIMessage):
-            print("\nAI:", msg.text())
+            ai_response = msg.content
             break
 
-    print("\nPatient Status    :", state["patient_status"])
-    print("Required Duration :", state["required_duration"])
-    print("Booking Confirmed :", state["booking_confirmed"])
+    return state, ai_response
 
-    if state["booking_confirmed"]:
-        print("\nAppointment booked successfully!")
-        break
+# while True:
+#     user = input("You: ")
+
+#     if user.lower() == "exit":
+#         break
+
+#     state["messages"].append(HumanMessage(content=user))
+
+#     state = chatbot(state)
+
+#     state = update_state(state)
+#     state = determine_duration(state)
+
+#     for msg in reversed(state["messages"]):
+#         if isinstance(msg, AIMessage):
+#             print("\nAI:", msg.text())
+#             break
+
+#     print("\nPatient Status    :", state["patient_status"])
+#     print("Required Duration :", state["required_duration"])
+#     print("Booking Confirmed :", state["booking_confirmed"])
+
+#     if state["booking_confirmed"]:
+#         print("\nAppointment booked successfully!")
+#         break
